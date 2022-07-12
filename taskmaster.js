@@ -9,7 +9,6 @@ module.exports = {
                 return creep.memory.role === 'worker' && !creep.memory.working && creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0  
             }
         });
-        console.log(freeWorkers)
         const harvestWorkers = room.find(FIND_MY_CREEPS,{
             filter: (creep)=>{
                 return creep.memory.role === 'worker' && !creep.memory.working && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
@@ -75,7 +74,7 @@ module.exports = {
             
         }
         for(let worker of freeWorkers){
-            if(toDo.length === 0 || room.controller.ticksToDowngrade < 7500){
+            if(toDo.length === 0 || room.controller.ticksToDowngrade < (3750*room.controller.level)){
                 worker.memory.job = {
                     name: 'upgrade', 
                     target: Game.getObjectById(room.controller.id)

@@ -1,7 +1,12 @@
 module.exports ={
     run(creep){
         if (creep.memory.working){
-            var target = Game.getObjectById(creep.memory.job.target.id)
+            var target = (creep.memory.job.target ? Game.getObjectById(creep.memory.job.target.id) : null)
+            if(target === null || target === undefined){
+                console.log('NullCatch hit:', creep)
+                creep.memory.working = false
+                creep.memory.job == false
+            }
             if(creep.memory.job.name != 'harvest' && creep.store.getUsedCapacity(RESOURCE_ENERGY)===0){
                 creep.memory.working = false
                 creep.memory.job = false
@@ -14,14 +19,9 @@ module.exports ={
                 creep.memory.working = false
                 creep.memory.job = false
             }
-            if(creep.memory.job.name === 'harvest' && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0){
+            if(creep.memory.job.name === 'harvest' && (creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0 || target.energy === 0)){
                 creep.memory.working = false
                 creep.memory.job = false
-            }
-            if(target === null || target === undefined){
-                console.log('NullCatch hit:', creep)
-                creep.memory.working = false
-                creep.memory.job == false
             }
             if(creep.memory.job.name === "recharge") {
                 if((creep.transfer(target, RESOURCE_ENERGY)) === ERR_NOT_IN_RANGE){
