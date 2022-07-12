@@ -1,9 +1,14 @@
 module.exports = {
     run(room){
         let toDo = []
-        const workers = room.find(FIND_MY_CREEPS, {
+        const freeWorkers = room.find(FIND_MY_CREEPS, {
             filter: (creep)=>{
                 return creep.memory.role === 'worker' && !creep.memory.working && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+            }
+        });
+        const workers = room.find(FIND_MY_CREEPS, {
+            filter: (creep)=>{
+                return creep.memory.role === 'worker'
             }
         });
         const recharge = room.find(FIND_MY_STRUCTURES, {
@@ -24,23 +29,44 @@ module.exports = {
         });
         for(let site in build){
             let job = build[site]
-            job.type = 'build'
-            toDo.push(job)
+            let worked = _.filter(workers, (worker)=>{
+                return ((worker.memory.job.target != undefined && worker.memory.job.target != null) ? 
+                worker.memory.job.target.id === job.id : 
+                null)
+            })
+            if (worked.length === 0){
+                job.type = 'build'
+                toDo.push(job)
+            }
+            
         }
         for(let battery in recharge){
             let job = recharge[battery]
-            job.type = 'recharge'
-            toDo.unshift(job)
+            let worked = _.filter(workers, (worker)=>{
+                return ((worker.memory.job.target != undefined && worker.memory.job.target != null) ? 
+                worker.memory.job.target.id === job.id : 
+                null)
+            })
+            if (worked.length === 0){
+                job.type = 'recharge'
+                toDo.unshift(job)
+            }
         }
         for(let crack in repair){
             let job = repair[crack]
-            job.type = 'repair'
-            toDo.push(job)
+            let worked = _.filter(workers, (worker)=>{
+                return ((worker.memory.job.target != undefined && worker.memory.job.target != null) ? 
+                worker.memory.job.target.id === job.id : 
+                null)
+            })
+            if(worked.length === 0){
+                job.type = 'repair'
+                toDo.push(job)
+            }
+            
         }
-        let i = 0
-        for(let worker of workers){
-            if(i==3 || toDo.length === 0){
-                i-=3
+        for(let worker of freeWorkers){
+            if(toDo.length === 0 || room.controller.ticksToDowngrade < 7500){
                 worker.memory.job = {
                     name: 'upgrade', 
                     target: Game.getObjectById(room.controller.id)
