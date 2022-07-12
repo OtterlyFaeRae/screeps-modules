@@ -1,11 +1,20 @@
+const worker = require("./worker");
+
 module.exports = {
     run(room){
         let toDo = []
+        const sources = room.find(FIND_SOURCES_ACTIVE)
         const freeWorkers = room.find(FIND_MY_CREEPS, {
             filter: (creep)=>{
-                return creep.memory.role === 'worker' && !creep.memory.working && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+                return creep.memory.role === 'worker' && !creep.memory.working && creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0  
             }
         });
+        console.log(freeWorkers)
+        const harvestWorkers = room.find(FIND_MY_CREEPS,{
+            filter: (creep)=>{
+                return creep.memory.role === 'worker' && !creep.memory.working && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
+            }
+        })
         const workers = room.find(FIND_MY_CREEPS, {
             filter: (creep)=>{
                 return creep.memory.role === 'worker'
@@ -22,9 +31,9 @@ module.exports = {
             }
         });
         const build = room.find(FIND_MY_CONSTRUCTION_SITES)
-        const repair = room.find(FIND_MY_STRUCTURES, {
+        const repair = room.find(FIND_STRUCTURES, {
             filter:(struc)=>{
-                return(struc.hits < struc.hitsMax)
+                return(struc.hits < (struc.hitsMax*0.75))
             }
         });
         for(let site in build){
@@ -80,6 +89,13 @@ module.exports = {
                 worker.memory.working=true
                 toDo.shift()
             }
+        }
+        for(let harvester of harvestWorkers){
+            harvester.memory.job = {
+                name: 'harvest',
+                target: harvester.pos.findClosestByPath(FIND_SOURCES_ACTIVE)
+            }
+            harvester.memory.working=true
         }
     }
 };
